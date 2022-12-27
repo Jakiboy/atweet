@@ -10,7 +10,7 @@ defined('ABSPATH') || die('forbidden');
 
 require_once __DIR__ . '/inc/Twitter.php';
 
-// Handle authorization
+// Refresh access token
 $twitter = new Twitter();
-$twitter->callback();
+$twitter->refreshToken();
 exit();
