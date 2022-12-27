@@ -38,7 +38,6 @@ abstract class AbstractTwitter
 	 * @var array $scopes
 	 * @var bool $sslVerify
 	 * @var int $retry, Refresh token request retry
-	 * @var bool $allowRefreshToken
 	 */
 	protected $dir;
 	protected $redirectUrl;
@@ -51,7 +50,6 @@ abstract class AbstractTwitter
 	];
 	protected $sslVerify = true;
 	protected $retry = 0;
-	protected $allowRefreshToken = true;
 
 	/**
 	 * @param string $website, Redirect URL website
@@ -82,7 +80,7 @@ abstract class AbstractTwitter
 	abstract protected function getRefershToken() : string;
 
 	/**
-	 * Get access token.
+	 * Get access token (Bearer).
 	 * 
 	 * @access protected
 	 * @param void
@@ -250,38 +248,36 @@ abstract class AbstractTwitter
 	}
 
 	/**
-	 * Refresh access token.
+	 * Refresh access token (Bearer).
 	 * 
-	 * @access protected
+	 * @access public
 	 * @param void
 	 * @return bool
 	 */
-	protected function refreshToken() : bool
+	public function refreshToken() : bool
 	{
 		if ( $this->retry < 1 ) {
 			$this->retry++;
 			$this->log('Refresh token requested');
-			if ( $this->allowRefreshToken ) {
-				try {
-					$response = $this->getHttpClient()
-					->request('POST', self::TOKEN_ACTION, [
-					    'form_params' => [
-					        'grant_type'    => 'refresh_token',
-					        'refresh_token' => $this->getRefershToken(),
-					        'client_id'     => $this->clientId
-					    ]
-					]);
-					$this->setPayload(
-						json_decode($response->getBody(),true)
-					);
-					return true;
+			try {
+				$response = $this->getHttpClient()
+				->request('POST', self::TOKEN_ACTION, [
+				    'form_params' => [
+				        'grant_type'    => 'refresh_token',
+				        'refresh_token' => $this->getRefershToken(),
+				        'client_id'     => $this->clientId
+				    ]
+				]);
+				$this->setPayload(
+					json_decode($response->getBody(),true)
+				);
+				return true;
 
-				} catch (Exception $e) {
-					$this->log($e->getMessage());
+			} catch (Exception $e) {
+				$this->log($e->getMessage());
 
-				} catch (\GuzzleHttp\Exception\ClientException $e) {
-					$this->log($e->getMessage());
-				}
+			} catch (\GuzzleHttp\Exception\ClientException $e) {
+				$this->log($e->getMessage());
 			}
 		}
 		return false;
@@ -389,7 +385,7 @@ abstract class AbstractTwitter
 		if ( !file_exists(($file = "{$this->dir}/secret.yaml")) ) {
 			@file_put_contents($file,'clientId:');
 		}
-		$secret = Config::parseFile($file);
+		$secret = $this->getConfig()::parseFile($file);
 		$this->clientId = $secret['clientId'] ?? '';
 		if ( empty($this->clientId) ) {
 			throw new \Exception('Undefined client ID');
@@ -442,7 +438,7 @@ abstract class AbstractTwitter
 	 * 
 	 * @access protected
 	 * @param void
-	 * @return object
+	 * @return HttpClient
 	 */
 	protected function getHttpClient() : HttpClient
 	{
@@ -450,6 +446,18 @@ abstract class AbstractTwitter
 			'base_uri' => self::ENDPOINT,
 			'verify'   => $this->sslVerify
 		]);
+	}
+
+	/**
+	 * Get config.
+	 * 
+	 * @access protected
+	 * @param void
+	 * @return Config
+	 */
+	protected function getConfig() : Config
+	{
+		return new Config;
 	}
 
     /**
