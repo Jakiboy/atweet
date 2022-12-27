@@ -462,7 +462,7 @@ abstract class AbstractTwitter
     protected function log(string $msg)
     {
 		$date = date('[d-m-Y]');
-		$file = __DIR__ . "/logs/log-{$date}.txt";
+		$file = "{$this->dir}/logs/log-{$date}.txt";
 		$date = date('[d-m-Y H:i:s]');
 		$msg  = "{$date}: {$msg}" . PHP_EOL;
 		@file_put_contents($file,$msg,FILE_APPEND);
