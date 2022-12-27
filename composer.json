@@ -1,0 +1,37 @@
+{
+  "name":"jakiboy/atweet",
+  "version":"0.1.0",
+  "type":"library",
+  "description":"Auto-tweet using Twitter OAuth 2.0 API V2",
+  "keywords":[
+    "php",
+    "twitter",
+    "api",
+    "WordPress",
+    "OAuth-2.0"
+  ],
+  "homepage":"https://jakiboy.github.io/atweet/",
+  "license":"MIT",
+  "authors":[
+    {
+      "name":"Jihad Sinnaour",
+      "email":"mail@jihadsinnaour.com",
+      "role":"Founder"
+    },
+    {
+      "name":"Softgine",
+      "email":"e-mailing@soft-gine.com",
+      "role":"Developer"
+    }
+  ],
+  "require":{
+    "php":">=7.2.5",
+    "guzzlehttp/guzzle": "^7.5",
+    "symfony/yaml": "^5.4"
+  },
+  "autoload":{
+    "psr-4":{
+      "Atweet\\":"src/"
+    }
+  }
+}
