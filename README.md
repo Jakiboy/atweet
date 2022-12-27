@@ -12,4 +12,4 @@ composer require jakiboy/atweet
 
 ## ⚡ Getting Started:
 
-* *All available use case examples located in [/examples](https://github.com/Jakiboy/atweet/tree/main/example)*.
+* *All available use case examples located in [/example](https://github.com/Jakiboy/atweet/tree/main/example)*.
