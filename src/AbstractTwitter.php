@@ -32,6 +32,7 @@ abstract class AbstractTwitter
 
 	/**
 	 * @access protected
+	 * @var string $dir, Working directory
 	 * @var string $redirectUrl
 	 * @var string $shortener
 	 * @var array $scopes
@@ -39,6 +40,7 @@ abstract class AbstractTwitter
 	 * @var int $retry, Refresh token request retry
 	 * @var bool $allowRefreshToken
 	 */
+	protected $dir;
 	protected $redirectUrl;
 	protected $shortener;
 	protected $scopes = [
@@ -53,12 +55,11 @@ abstract class AbstractTwitter
 
 	/**
 	 * @param string $website, Redirect URL website
-	 * @param string $path, Config directory path
 	 */
-	public function __construct(string $website = '', string $path = '')
+	public function __construct(string $website = '')
 	{
 		$this->setRedirectUrl($website);
-		$this->setClientId($path);
+		$this->setClientId();
 		$this->startSession();
 	}
 
@@ -237,6 +238,18 @@ abstract class AbstractTwitter
 	}
 
 	/**
+	 * Set directory.
+	 * 
+	 * @access public
+	 * @param string $scopes
+	 * @return void
+	 */
+	public function setDir(string $dir)
+	{
+	    $this->dir = $dir;
+	}
+
+	/**
 	 * Refresh access token.
 	 * 
 	 * @access protected
@@ -367,13 +380,13 @@ abstract class AbstractTwitter
 	 * Set client ID.
 	 * 
 	 * @access protected
-	 * @param string $path
+	 * @param void
 	 * @return void
 	 * @throws Exception
 	 */
-	protected function setClientId(string $path = '')
+	protected function setClientId()
 	{
-		if ( !file_exists(($file = "{$path}/secret.yaml")) ) {
+		if ( !file_exists(($file = "{$this->dir}/secret.yaml")) ) {
 			@file_put_contents($file,'clientId:');
 		}
 		$secret = Config::parseFile($file);

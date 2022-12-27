@@ -13,7 +13,8 @@ final class Twitter extends AbstractTwitter
 	public function __construct()
 	{
 		$this->disableSSL(); // Debug only
-		parent::__construct(get_site_url(), __DIR__);
+		$this->setDir(__DIR__);
+		parent::__construct(get_site_url());
 	}
 
 	/**
