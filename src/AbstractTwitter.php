@@ -13,6 +13,8 @@ use Symfony\Component\Yaml\Yaml as Config;
  * - App permissions: Read and write
  * - Type of App: Native App
  * - Callback URI / Redirect URL: {https://example.com}/twitter/callback/
+ * 
+ * @todo Add revoke access method.
  */
 abstract class AbstractTwitter
 {

@@ -6,9 +6,9 @@ use Atweet\AbstractTwitter;
 
 /**
  * Twitter OAuth 2.0 implementation for WordPress.
- * Allows multiple websites tweet per single account.
+ * Allows multiple websites tweet per single account (Beta).
  * 
- * FOR TESTING PURPOSE ONLY!
+ * @todo Use JWT for internal API.
  */
 final class Twitter extends AbstractTwitter
 {
@@ -31,7 +31,16 @@ final class Twitter extends AbstractTwitter
 	 */
 	public function authenticate()
 	{
-		wp_redirect($this->getAuthenticationUrl());
+		if ( self::isMainWebsite() ) {
+			wp_redirect($this->getAuthenticationUrl());
+			return;
+		}
+		
+		if ( $this->getRemoteAccessToken() ) {
+			if ( ($user = $this->getUser()) ) {
+				$this->updateUser($user);
+			}
+		}
 	}
 
 	/**
@@ -43,16 +52,24 @@ final class Twitter extends AbstractTwitter
 	 */
 	public function refreshToken() : bool
 	{
-		// Main account
-		if ( get_option('twitter-allow-refresh-token') == 'yes' ) {
+		if ( self::isMainWebsite() ) {
 			return parent::refreshToken();
 		}
+		return $this->getRemoteAccessToken();
+	}
 
-		// Get remote access token
-		$secret = $this->getConfig()::parseFile("{$this->dir}/secret.yaml");
-		$token = $secret['internal']['token'] ?? '';
-		$endpoint = $secret['internal']['endpoint'] ?? '';
-		$this->log('Remote refresh token requested');
+	/**
+	 * Get remote access token (Bearer).
+	 * 
+	 * @access public
+	 * @param string $access
+	 * @return bool
+	 */
+	public function getRemoteAccessToken() : bool
+	{
+		$token = get_option('twitter-external-token');
+		$endpoint = get_option('twitter-external-endpoint');
+		$this->log('Remote access token requested');
 		try {
 
 			$response = $this->getHttpClient()
@@ -63,6 +80,7 @@ final class Twitter extends AbstractTwitter
 			]);
 			$body = json_decode($response->getBody(),true);
 			$access = $body['access'] ?? '';
+			$this->payload['access'] = $access;
 			$this->updateAccessToken($access);
 			return true;
 
@@ -130,13 +148,47 @@ final class Twitter extends AbstractTwitter
 	 */
 	public static function internalApiPermission($args) : bool
 	{
-		if ( get_option('twitter-allow-refresh-token') !== 'yes' ) {
+		if ( !self::isMainWebsite() ) {
 			return false;
 		}
 		if ( !($token = self::getBearerToken()) ) {
 			return false;
 		}
 		return (get_option('twitter-internal-token') === $token);
+	}
+
+	/**
+	 * Check twitter main website.
+	 * 
+	 * @access public
+	 * @param string $access
+	 * @return bool
+	 */
+	public static function isMainWebsite()
+	{
+		return (get_option('twitter-main-website') == 'yes');
+	}
+
+	/**
+	 * Remove options.
+	 *
+	 * @access public
+	 * @param void
+	 * @return void
+	 */
+	public static function removeOptions()
+	{
+		delete_option('twitter-access-token');
+		delete_option('twitter-refresh-token');
+		delete_option('twitter-account-id');
+		delete_option('twitter-account-name');
+		delete_option('twitter-account-username');
+
+		// Advanced
+		delete_option('twitter-internal-token');
+		delete_option('twitter-external-token');
+		delete_option('twitter-external-endpoint');
+		delete_option('twitter-main-website');
 	}
 
 	/**
@@ -189,6 +241,23 @@ final class Twitter extends AbstractTwitter
 	private function updateAccessToken(string $access)
 	{
 		update_option('twitter-access-token',$access);
+	}
+
+	/**
+	 * Update user.
+	 * 
+	 * @access private
+	 * @param array $user
+	 * @return void
+	 */
+	private function updateUser(array $user)
+	{
+		$id = $user['data']['id'] ?? '';
+		$name = $user['data']['name'] ?? '';
+		$username = $user['data']['username'] ?? '';
+		update_option('twitter-account-id',$id);
+		update_option('twitter-account-name',$name);
+		update_option('twitter-account-username',$username);
 	}
 
 	/**
